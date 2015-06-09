@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/gopacket/routing"
 	"github.com/miekg/dns"
+	"github.com/phemmer/gopacket/routing"
 	sm "github.com/phemmer/sawmill"
 	"github.com/phemmer/sawmill/handler/sentry"
 	"github.com/phemmer/sawmill/handler/splunk"
@@ -16,27 +16,31 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-var localDNSAddr string
+var localDNSAddr string = os.Getenv("LOCAL_DNS_ADDR")
 var googleDNSAddr string = "8.8.8.8:53"
-var gatewayPingAddr string
+var gatewayPingAddr string = os.Getenv("GATEWAY_PING_ADDR")
 var googlePingAddr string = "8.8.8.8"
 
 func init() {
-	cc, err := dns.ClientConfigFromFile("/etc/resolv.conf")
-	if err != nil {
-		sm.Fatal("error loading /etc/resolv.conf", sm.Fields{"error": err})
+	if localDNSAddr == "" {
+		cc, err := dns.ClientConfigFromFile("/etc/resolv.conf")
+		if err != nil {
+			sm.Fatal("error loading /etc/resolv.conf", sm.Fields{"error": err})
+		}
+		localDNSAddr = cc.Servers[0] + ":53"
 	}
-	localDNSAddr = cc.Servers[0] + ":53"
 
-	router, err := routing.New()
-	if err != nil {
-		sm.Fatal("could not get IP router", sm.Fields{"error": err})
+	if gatewayPingAddr == "" {
+		router, err := routing.New()
+		if err != nil {
+			sm.Fatal("could not get IP router", sm.Fields{"error": err})
+		}
+		_, gatewayAddr, _, err := router.Route(net.ParseIP("8.8.8.8"))
+		if err != nil {
+			sm.Fatal("unable to get default route", sm.Fields{"error": err})
+		}
+		gatewayPingAddr = gatewayAddr.String()
 	}
-	_, gatewayAddr, _, err := router.Route(net.ParseIP("8.8.8.8"))
-	if err != nil {
-		sm.Fatal("unable to get default route", sm.Fields{"error": err})
-	}
-	gatewayPingAddr = gatewayAddr.String()
 }
 
 type Stats struct {
