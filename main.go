@@ -117,7 +117,7 @@ func checkResolve(host string, addr string, wg *sync.WaitGroup, stats *Stats) {
 
 	duration := time.Now().Sub(timeStart)
 
-	stats.Set("resolve."+host+".time", duration)
+	stats.Set("resolve."+host+".time", float64(duration.Nanoseconds())/float64(time.Millisecond))
 }
 
 func checkPing(host string, addr string, wg *sync.WaitGroup, stats *Stats) {
@@ -173,5 +173,5 @@ func checkPing(host string, addr string, wg *sync.WaitGroup, stats *Stats) {
 
 	duration := time.Now().Sub(timeStart)
 
-	stats.Set("ping."+host+".time", duration)
+	stats.Set("ping."+host+".time", float64(duration.Nanoseconds())/float64(time.Millisecond))
 }
