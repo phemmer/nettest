@@ -2,6 +2,7 @@ package main
 
 import (
 	"net"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -77,6 +78,10 @@ func main() {
 			sm.AddHandler("splunk", sm.FilterHandler(splunkHandler).LevelMin(sm.InfoLevel))
 		}
 	}
+
+	// this is just so elastic beanstalk can health check us
+	noopHandler := func(w http.ResponseWriter, r *http.Request) {}
+	go http.ListenAndServe("0.0.0.0:8080", http.HandlerFunc(noopHandler))
 
 	wg := sync.WaitGroup{}
 	ticker := time.NewTicker(time.Second * 5)
