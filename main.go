@@ -128,7 +128,7 @@ func checkPing(host string, addr string, wg *sync.WaitGroup, stats *Stats) {
 	//c, err := icmp.ListenPacket("udp4", "0.0.0.0")
 	c, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
-		sm.Error("unable to listen for udp", sm.Fields{"error": err})
+		sm.Error("unable to listen for udp", sm.Fields{"error": err, "host": host, "addr": addr})
 		return
 	}
 	defer c.Close()
@@ -144,7 +144,7 @@ func checkPing(host string, addr string, wg *sync.WaitGroup, stats *Stats) {
 	}
 	mm, err := m.Marshal(nil)
 	if err != nil {
-		sm.Error("unable to marshal message", sm.Fields{"error": err})
+		sm.Error("unable to marshal message", sm.Fields{"error": err, "host": host, "addr": addr})
 		return
 	}
 
@@ -152,21 +152,21 @@ func checkPing(host string, addr string, wg *sync.WaitGroup, stats *Stats) {
 
 	//if _, err := c.WriteTo(mm, &net.UDPAddr{IP: net.ParseIP(addr)}); err != nil {
 	if _, err := c.WriteTo(mm, &net.IPAddr{IP: net.ParseIP(addr)}); err != nil {
-		sm.Error("unable to send echo request", sm.Fields{"error": err})
+		sm.Error("unable to send echo request", sm.Fields{"error": err, "host": host, "addr": addr})
 		return
 	}
 
 	rb := make([]byte, 1500)
 	n, _, err := c.ReadFrom(rb)
 	if err != nil {
-		sm.Error("unable to read response", sm.Fields{"error": err})
+		sm.Error("unable to read response", sm.Fields{"error": err, "host": host, "addr": addr})
 		return
 	}
 
 	if false {
 		_, err := icmp.ParseMessage(iana.ProtocolIPv6ICMP, rb[:n])
 		if err != nil {
-			sm.Error("unable to parse response", sm.Fields{"error": err})
+			sm.Error("unable to parse response", sm.Fields{"error": err, "host": host, "addr": addr})
 			return
 		}
 	}
